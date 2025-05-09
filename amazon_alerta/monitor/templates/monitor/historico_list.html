@@ -1,0 +1,221 @@
+{% extends 'monitor/base.html' %}
+
+{% block title %}Histórico de Preços - Amazon Alerta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-clock-history"></i> Histórico de Preços</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'check_all_prices' %}" class="btn btn-success">
+            <i class="bi bi-arrow-repeat"></i> Verificar Todos os Preços
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="mb-0">Histórico de Verificações</h5>
+            </div>
+            <div class="col-md-4">
+                <form method="get" class="d-flex">
+                    <select name="produto" class="form-select form-select-sm me-2">
+                        <option value="">Todos os produtos</option>
+                        {% for p in produtos %}
+                        <option value="{{ p.id }}" {% if request.GET.produto == p.id|stringformat:"i" %}selected{% endif %}>
+                            {{ p.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-filter"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if historico %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Data</th>
+                        <th>Variação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in historico %}
+                    <tr>
+                        <td>{{ item.produto.nome }}</td>
+                        <td>R$ {{ item.preco }}</td>
+                        <td>{{ item.data|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if item.variacao %}
+                                {% if item.variacao > 0 %}
+                                    <span class="price-up">
+                                        <i class="bi bi-arrow-up"></i>
+                                        +R$ {{ item.variacao|floatformat:2 }}
+                                    </span>
+                                {% elif item.variacao < 0 %}
+                                    <span class="price-down">
+                                        <i class="bi bi-arrow-down"></i>
+                                        -R$ {{ item.variacao|abs|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">
+                                        <i class="bi bi-dash"></i> Sem alteração
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'produto_detail' item.produto.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> Ver Produto
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum histórico de preço encontrado.
+            {% if request.GET.produto %}
+                <a href="{% url 'historico_list' %}" class="alert-link">Limpar filtro</a>.
+            {% else %}
+                <a href="{% url 'check_all_prices' %}" class="alert-link">Verificar preços agora</a>.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if historico and request.GET.produto %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Gráfico de Evolução de Preço</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="priceHistoryChart" width="400" height="200"></canvas>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if historico and request.GET.produto %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('priceHistoryChart');
+        
+        if (ctx) {
+            // Preparar dados para o gráfico
+            const labels = [];
+            const prices = [];
+            
+            {% if chart_data %}
+                {% for date in chart_data.dates %}
+                    labels.push("{{ date|escapejs }}");
+                {% endfor %}
+                
+                {% for price in chart_data.prices %}
+                    prices.push({{ price|stringformat:"f" }});
+                {% endfor %}
+            {% endif %}
+            
+            // Criar o gráfico
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Preço (R$)',
+                        data: prices,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Evolução de Preço'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Preço (R$)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Data'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

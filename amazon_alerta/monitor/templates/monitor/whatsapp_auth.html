@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticação WhatsApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #25D366;
+        }
+        .step {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+        .note {
+            background-color: #FFF9C4;
+            padding: 10px;
+            border-left: 4px solid #FBC02D;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #25D366;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Autenticação do WhatsApp</h1>
+    
+    <div class="container">
+        <h2>Como autenticar o WhatsApp para envio de notificações</h2>
+        
+        <p>Este sistema usa o WhatsApp Web para enviar notificações de preços. Para autenticar, siga os passos abaixo:</p>
+        
+        <div class="step">
+            <h3>1. Inicie o processo de envio de notificação</h3>
+            <p>Para iniciar o processo de autenticação, você precisa tentar enviar uma notificação de teste ou executar o comando de verificação de preços:</p>
+            <ul>
+                <li>Envie uma notificação de teste para um contato através da interface do sistema</li>
+                <li>OU execute o comando <code>python manage.py check_prices</code> no terminal</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>2. Escaneie o QR Code</h3>
+            <p>Quando você iniciar o processo, uma janela do navegador será aberta automaticamente com o WhatsApp Web. Você verá um QR code na tela.</p>
+            <ul>
+                <li>Abra o WhatsApp no seu celular</li>
+                <li>Toque em Menu (três pontos) ou Configurações</li>
+                <li>Selecione "Dispositivos conectados"</li>
+                <li>Toque em "Conectar um dispositivo"</li>
+                <li>Aponte a câmera do seu celular para o QR code exibido na tela do computador</li>
+            </ul>
+        </div>
+        
+        <div class="note">
+            <p><strong>Nota importante:</strong> Você só precisa escanear o QR code uma vez. O WhatsApp Web manterá a sessão ativa por um período, geralmente de algumas semanas, a menos que você desconecte manualmente.</p>
+        </div>
+        
+        <div class="step">
+            <h3>3. Pronto!</h3>
+            <p>Após escanear o QR code com sucesso, o sistema estará autenticado e poderá enviar notificações via WhatsApp.</p>
+        </div>
+        
+        <a href="/" class="button">Voltar para o Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <h2>Solução de problemas</h2>
+        
+        <p>Se você encontrar problemas durante a autenticação:</p>
+        
+        <ul>
+            <li>Certifique-se de que seu celular tem conexão com a internet</li>
+            <li>Verifique se o WhatsApp no seu celular está atualizado</li>
+            <li>Tente fechar e reabrir o WhatsApp no seu celular</li>
+            <li>Se a janela do navegador não abrir automaticamente, tente executar o comando novamente</li>
+            <li>Se o problema persistir, tente reiniciar o servidor Django e tentar novamente</li>
+        </ul>
+    </div>
+</body>
+</html>

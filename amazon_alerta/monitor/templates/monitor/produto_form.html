@@ -1,0 +1,88 @@
+{% extends 'monitor/base.html' %}
+
+{% block title %}{% if form.instance.id %}Editar{% else %}Novo{% endif %} Produto - Amazon Alerta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>
+            <i class="bi bi-box-seam"></i> 
+            {% if form.instance.id %}
+                Editar Produto
+            {% else %}
+                Novo Produto
+            {% endif %}
+        </h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            {% if form.instance.id %}
+                Editar {{ form.instance.nome }}
+            {% else %}
+                Cadastrar Novo Produto
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.nome.id_for_label }}" class="form-label">Nome do Produto</label>
+                {{ form.nome }}
+                {% if form.nome.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.nome.errors }}
+                </div>
+                {% endif %}
+                <div class="form-text">Digite um nome descritivo para o produto.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.url.id_for_label }}" class="form-label">URL do Produto</label>
+                {{ form.url }}
+                {% if form.url.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.url.errors }}
+                </div>
+                {% endif %}
+                <div class="form-text">Cole a URL completa da página do produto na Amazon.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.preco_alvo.id_for_label }}" class="form-label">Preço Alvo</label>
+                <div class="input-group">
+                    <span class="input-group-text">R$</span>
+                    {{ form.preco_alvo }}
+                </div>
+                {% if form.preco_alvo.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.preco_alvo.errors }}
+                </div>
+                {% endif %}
+                <div class="form-text">Digite o preço máximo que você está disposto a pagar.</div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.ativo }}
+                <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
+                    Ativo
+                </label>
+                <div class="form-text">Marque esta opção para que o produto seja monitorado.</div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'produto_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

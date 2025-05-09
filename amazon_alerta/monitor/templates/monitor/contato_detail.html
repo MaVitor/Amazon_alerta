@@ -1,0 +1,137 @@
+{% extends 'monitor/base.html' %}
+
+{% block title %}{{ contato.nome }} - Amazon Alerta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-person-lines-fill"></i> {{ contato.nome }}</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'contato_update' contato.id %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Detalhes do Contato</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-circle" style="font-size: 5rem; color: #3498db;"></i>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Nome:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ contato.nome }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Telefone:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ contato.telefone }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Status:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {% if contato.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Alertas:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ alertas.count }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Enviar Notificação de Teste</h5>
+            </div>
+            <div class="card-body">
+                {% if produtos_com_preco %}
+                    <p>Selecione um produto para enviar uma notificação de teste:</p>
+                    <div class="list-group">
+                        {% for produto in produtos_com_preco %}
+                        <a href="{% url 'send_test_notification' produto.id contato.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ produto.nome }}</h6>
+                                <small>R$ {{ produto.preco_atual }}</small>
+                            </div>
+                            <small class="text-muted">Clique para enviar notificação</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Não há produtos com preço atual para enviar notificação.
+                        <a href="{% url 'check_all_prices' %}" class="alert-link">Verificar preços primeiro</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Alertas Enviados</h5>
+            </div>
+            <div class="card-body">
+                {% if alertas %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Preço no Momento</th>
+                                <th>Data de Envio</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alerta in alertas %}
+                            <tr>
+                                <td>{{ alerta.produto.nome }}</td>
+                                <td>R$ {{ alerta.preco_no_momento }}</td>
+                                <td>{{ alerta.data_envio|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'produto_detail' alerta.produto.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> Ver Produto
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum alerta enviado para este contato.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

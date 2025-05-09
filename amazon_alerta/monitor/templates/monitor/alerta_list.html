@@ -1,0 +1,122 @@
+{% extends 'monitor/base.html' %}
+
+{% block title %}Alertas - Amazon Alerta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-bell"></i> Alertas</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'check_all_prices' %}" class="btn btn-success">
+            <i class="bi bi-arrow-repeat"></i> Verificar Preços
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="mb-0">Alertas Enviados</h5>
+            </div>
+            <div class="col-md-4">
+                <form method="get" class="d-flex">
+                    <select name="filtro" class="form-select form-select-sm me-2">
+                        <option value="">Todos</option>
+                        <option value="produto" {% if request.GET.filtro == 'produto' %}selected{% endif %}>Por Produto</option>
+                        <option value="contato" {% if request.GET.filtro == 'contato' %}selected{% endif %}>Por Contato</option>
+                    </select>
+                    <input type="text" name="q" class="form-control form-control-sm me-2" placeholder="Buscar..." value="{{ request.GET.q }}">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if alertas %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Contato</th>
+                        <th>Preço no Momento</th>
+                        <th>Data de Envio</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alerta in alertas %}
+                    <tr>
+                        <td>{{ alerta.produto.nome }}</td>
+                        <td>{{ alerta.contato.nome }}</td>
+                        <td>R$ {{ alerta.preco_no_momento }}</td>
+                        <td>{{ alerta.data_envio|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'produto_detail' alerta.produto.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-box-seam"></i>
+                                </a>
+                                <a href="{% url 'contato_detail' alerta.contato.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-person"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum alerta encontrado.
+            {% if request.GET.filtro or request.GET.q %}
+                <a href="{% url 'alerta_list' %}" class="alert-link">Limpar filtros</a>.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

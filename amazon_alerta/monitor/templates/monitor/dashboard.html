@@ -1,0 +1,287 @@
+{% extends 'monitor/base.html' %}
+
+{% block title %}Dashboard - Amazon Alerta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card dashboard-card text-center">
+            <div class="card-body">
+                <i class="bi bi-box-seam dashboard-icon"></i>
+                <h5 class="card-title">Produtos</h5>
+                <h2 class="mb-0">{{ total_produtos }}</h2>
+                <p class="text-muted">Produtos monitorados</p>
+                <a href="{% url 'produto_list' %}" class="btn btn-primary btn-sm">Ver todos</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-center">
+            <div class="card-body">
+                <i class="bi bi-person-lines-fill dashboard-icon"></i>
+                <h5 class="card-title">Contatos</h5>
+                <h2 class="mb-0">{{ total_contatos }}</h2>
+                <p class="text-muted">Contatos cadastrados</p>
+                <a href="{% url 'contato_list' %}" class="btn btn-primary btn-sm">Ver todos</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-center">
+            <div class="card-body">
+                <i class="bi bi-clock-history dashboard-icon"></i>
+                <h5 class="card-title">Verificações</h5>
+                <h2 class="mb-0">{{ total_historico }}</h2>
+                <p class="text-muted">Verificações realizadas</p>
+                <a href="{% url 'historico_list' %}" class="btn btn-primary btn-sm">Ver histórico</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-center">
+            <div class="card-body">
+                <i class="bi bi-bell dashboard-icon"></i>
+                <h5 class="card-title">Alertas</h5>
+                <h2 class="mb-0">{{ total_alertas }}</h2>
+                <p class="text-muted">Alertas enviados</p>
+                <a href="{% url 'alerta_list' %}" class="btn btn-primary btn-sm">Ver alertas</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> Produtos Monitorados</h5>
+                <a href="{% url 'produto_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Novo Produto
+                </a>
+            </div>
+            <div class="card-body">
+                {% if produtos %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Preço Atual</th>
+                                <th>Preço Alvo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos %}
+                            <tr>
+                                <td>{{ produto.nome }}</td>
+                                <td>
+                                    {% if produto.preco_atual %}
+                                        R$ {{ produto.preco_atual }}
+                                    {% else %}
+                                        <span class="text-muted">Não verificado</span>
+                                    {% endif %}
+                                </td>
+                                <td>R$ {{ produto.preco_alvo }}</td>
+                                <td>
+                                    {% if produto.preco_atual and produto.preco_atual <= produto.preco_alvo %}
+                                        <span class="badge bg-success">Abaixo do alvo</span>
+                                    {% elif produto.preco_atual %}
+                                        <span class="badge bg-warning text-dark">Acima do alvo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Não verificado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'produto_detail' produto.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'check_price' produto.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum produto cadastrado.
+                    <a href="{% url 'produto_create' %}" class="alert-link">Cadastre seu primeiro produto</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Evolução de Preços</h5>
+            </div>
+            <div class="card-body">
+                {% if produtos_com_historico %}
+                <canvas id="priceChart" width="400" height="300"></canvas>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Não há dados suficientes para gerar o gráfico.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Contatos</h5>
+                <a href="{% url 'contato_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Novo Contato
+                </a>
+            </div>
+            <div class="card-body">
+                {% if contatos %}
+                <ul class="list-group">
+                    {% for contato in contatos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-person"></i> {{ contato.nome }}
+                            <br>
+                            <small class="text-muted">{{ contato.telefone }}</small>
+                        </div>
+                        <span class="badge bg-{% if contato.ativo %}success{% else %}danger{% endif %} rounded-pill">
+                            {% if contato.ativo %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum contato cadastrado.
+                    <a href="{% url 'contato_create' %}" class="alert-link">Cadastre seu primeiro contato</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bell"></i> Últimos Alertas</h5>
+            </div>
+            <div class="card-body">
+                {% if alertas %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Contato</th>
+                                <th>Preço no Momento</th>
+                                <th>Data de Envio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alerta in alertas %}
+                            <tr>
+                                <td>{{ alerta.produto.nome }}</td>
+                                <td>{{ alerta.contato.nome }}</td>
+                                <td>R$ {{ alerta.preco_no_momento }}</td>
+                                <td>{{ alerta.data_envio|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum alerta enviado ainda.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if produtos_com_historico %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('priceChart');
+        
+        if (ctx) {
+            // Função para gerar cores aleatórias
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+            
+            // Datas para o eixo X
+            const labels = {{ chart_dates|safe }};
+            
+            // Datasets para cada produto
+            const datasets = [];
+            
+            {% for produto in produtos_com_historico %}
+            datasets.push({
+                label: "{{ produto.nome|escapejs }}",
+                data: {{ produto.precos|safe }},
+                borderColor: getRandomColor(),
+                tension: 0.1,
+                fill: false
+            });
+            {% endfor %}
+            
+            // Criar o gráfico
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Evolução de Preços'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Preço (R$)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Data'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
